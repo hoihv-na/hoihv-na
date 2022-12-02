@@ -1,0 +1,45 @@
+1. Request Mr Crishtian send customer’s consumption on first day of each month (Ex: Pls send me customer’s consumption 03/2022 for Airtime service)
+
+2. Upload file to server 10.121.5.78
+- Compress zip file before upload
+- Upload to /u02/airtime/CdrReader/cdr/bi2
+- After upload done --> unzip file uploaded: unzip uploadedfile.zip
+
+3. Move file to import
+- Move file: mv /u02/airtime/CdrReader/cdr/bi2/uploadedfile.csv /u02/airtime/CdrReader/cdr/bi
+
+4. Check after import
+- After import done (don't see file on /u02/airtime/CdrReader/cdr/bi)
+- Compare number of imported record and number of line on CDR file. If it's same --> OK
+	+ Check imported record: select count(1) from consumption_MMyy;
+
+5. Calculate customer (if import OK)
+- Run sql: input day is previous month (Ex: if now is 04/2022 then input is 03/2022)
+begin
+    calc_customer(to_date('202203','yyyymm'));
+end;
+
+- Check after
+select count(1) from customer_2;
+select count(1) from consumption_MMyy;
+--> It's same --> OK
+
+select count(1) from customer_2 where basic_money >= 100 and last_tot_cost >= 100;
+--> It's the number of customer can be loan in this month
+select count(1) from customer where basic_money >= 100 and last_tot_cost >= 100;
+--> It's the number of customer can be loan in the previous month
+
+6. Swap data
+- Check before
+select count(1) from customer;
+select count(1) from customer_2;
+
+- Execute
+rename customer to customer_3;
+rename customer_2 to customer;
+rename customer_3 to customer_2;
+
+- Check after
+select count(1) from customer;
+select count(1) from customer_2;
+--> If the number is swapped --> OK
